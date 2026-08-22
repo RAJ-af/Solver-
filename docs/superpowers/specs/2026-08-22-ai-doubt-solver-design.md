@@ -7,9 +7,10 @@
 
 Ek Flutter app jisme student kisi bhi question (math, science, etc.) ki photo
 click karke ya gallery se select karke **step-by-step Hinglish solution** paata
-hai. Solution OpenRouter API ke through `stealth/ox-alpha` model se aata hai,
-markdown me render hota hai, aur locally save hota hai taaki baad me dobara dekha
-ja sake.
+hai. Solution kisi bhi **OpenAI-compatible vision API** se aata hai (default
+config: OpenRouter, model `stealth/ox-alpha`) — provider `.env` me badla ja
+sakta hai, code touch kiye bina. Response markdown me render hota hai, aur
+locally save hota hai taaki baad me dobara dekha ja sake.
 
 **Non-goals (YAGNI):** login/cloud sync, multiple subjects UI, OCR-only mode,
 share buttons, chat-style follow-up questions.
@@ -25,7 +26,7 @@ lib/
 ├── theme/app_theme.dart     ← light + dark ThemeData, text themes
 ├── models/doubt.dart        ← Doubt model
 ├── services/
-│   ├── api_service.dart     ← OpenRouter request/response handling
+│   ├── api_service.dart     ← OpenAI-compatible request/response (provider-agnostic)
 │   ├── db_service.dart      ← sqflite CRUD
 │   └── image_service.dart   ← resize/compress + persist processed file
 ├── store/doubt_store.dart   ← ChangeNotifier: doubts list + refresh triggers
@@ -73,15 +74,19 @@ lib/
 
 Target: typical phone photo 3–4 MB → ~150–350 KB processed.
 
-## API contract (OpenRouter)
+## API contract (OpenAI-compatible chat completions)
 
-- Endpoint: `POST https://openrouter.ai/api/v1/chat/completions`
-- Headers: `Authorization: Bearer $OPENROUTER_API_KEY`, `Content-Type:
-  application/json`
+Provider-agnostic: URL, key aur model teeno `.env` se aate hain — code me kahin
+bhi hardcode nahi. Default config OpenRouter hai, par koi bhi OpenAI-compatible
+endpoint chal jayega.
+
+- Endpoint: `POST $API_BASE_URL` (default:
+  `https://openrouter.ai/api/v1/chat/completions`)
+- Headers: `Authorization: Bearer $API_KEY`, `Content-Type: application/json`
 - Body:
   ```json
   {
-    "model": "stealth/ox-alpha",
+    "model": "$API_MODEL",
     "messages": [{
       "role": "user",
       "content": [
@@ -91,14 +96,19 @@ Target: typical phone photo 3–4 MB → ~150–350 KB processed.
     }]
   }
   ```
+- Compatibility note: `image_url` simple object hi bhejte hain (`{"url": ...}`),
+  optional fields like `detail` nahi bhejte — ye sabse zyada providers accept
+  karte hain. Provider-specific extras ki zaroorat pade to wo future me add
+  honge.
+- Response parse: standard shape `choices[0].message.content` (string).
 - Prompt (Hinglish instruction): pehli line exactly `TITLE: <chhota question>`
   (max ~60 chars), uske baad step-by-step Hinglish solution markdown me — har
   step numbered, formulas LaTeX ($...$) me, end me **Final Answer** section.
 - Parsing: content agar `TITLE:` prefix se shuru hota hai to title split,
   warna fallback title = solution ka first non-empty line truncated 60 chars.
-- Timeout: 90s. Errors: missing key / SocketException / HTTP != 200 / malformed
-  JSON → typed exceptions jo SolutionScreen friendly Hinglish error card
-  dikhata hai (Retry ke saath).
+- Timeout: 90s. Errors: missing env values / SocketException / HTTP != 200 /
+  malformed JSON → typed exceptions jo SolutionScreen friendly Hinglish error
+  card dikhata hai (Retry ke saath).
 
 ## Local DB (sqflite)
 
@@ -161,10 +171,19 @@ Base body size 15, headings scale 20–28.
 
 ## Environment / secrets
 
-- `.env` (gitignored): `OPENROUTER_API_KEY=openrouter_key_yahan`
-- `.env.example` committed with placeholder
+`.env` (gitignored):
+
+```env
+API_BASE_URL=https://openrouter.ai/api/v1/chat/completions
+API_KEY=yahan_apna_key_daalo
+API_MODEL=stealth/ox-alpha
+```
+
+- Teeno values `ApiService` runtime par dotenv se read karta hai — provider
+  switch karna ho to sirf `.env` edit, code change zero
+- `.env.example` committed with placeholder values
 - pubspec assets me `.env` registered; `main()` me `await dotenv.load()`
-- Key na mile to app chalega, bas solve attempt par clear error message
+- Koi value na mile to app chalega, bas solve attempt par clear error message
 
 ## Packages (pubspec)
 
