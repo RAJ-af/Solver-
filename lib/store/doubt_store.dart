@@ -18,9 +18,12 @@ class DoubtStore extends ChangeNotifier {
   Future<void> refresh() async {
     _loading = true;
     notifyListeners();
-    _doubts = await _db.getAll();
-    _loading = false;
-    notifyListeners();
+    try {
+      _doubts = await _db.getAll();
+    } finally {
+      _loading = false;
+      notifyListeners();
+    }
   }
 
   Future<void> addSaved(String imagePath, SolvedAnswer answer) async {
