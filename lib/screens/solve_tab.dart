@@ -112,7 +112,7 @@ class _ActionCard extends StatelessWidget {
           padding: const EdgeInsets.all(18),
           child: Row(children: [
             Container(width: 52, height: 52,
-              decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(16)),
+              decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(14)),
               child: Icon(icon, color: iconColor, size: 26)),
             const SizedBox(width: 16),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

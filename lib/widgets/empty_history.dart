@@ -20,7 +20,7 @@ class EmptyHistory extends StatelessWidget {
             Container(width: 96, height: 96,
               decoration: BoxDecoration(shape: BoxShape.circle,
                   color: AppTheme.teal.withValues(alpha: .18)),
-              child: Icon(Icons.help_outline_rounded, size: 42, color: AppTheme.teal)),
+              child: Icon(Icons.photo_outlined, size: 42, color: AppTheme.teal)),
             Positioned(
               top: 4, right: 8,
               child: Container(width: 30, height: 30,
