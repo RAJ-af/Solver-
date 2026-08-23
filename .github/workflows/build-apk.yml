@@ -25,9 +25,9 @@ jobs:
 
       - name: Create .env from secret
         run: |
-          echo "API_BASE_URL=https://openrouter.ai/api/v1/chat/completions" > .env
+          echo "API_BASE_URL=${{ vars.API_BASE_URL }}" > .env
           echo "API_KEY=${{ secrets.OPENROUTER_API_KEY }}" >> .env
-          echo "API_MODEL=stealth/ox-alpha" >> .env
+          echo "API_MODEL=${{ vars.API_MODEL }}" >> .env
 
       - uses: subosito/flutter-action@v2
         with:
