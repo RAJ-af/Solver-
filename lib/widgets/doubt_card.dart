@@ -13,17 +13,18 @@ class DoubtCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final imgExists = File(doubt.imagePath).existsSync();
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
         contentPadding: const EdgeInsets.all(12),
         leading: ClipRRect(
           borderRadius: BorderRadius.circular(14),
-          child: imgExists
-              ? Image.file(File(doubt.imagePath), width: 64, height: 64, fit: BoxFit.cover)
-              : Container(width: 64, height: 64, color: Theme.of(context).dividerColor,
-                  child: const Icon(Icons.image_not_supported_outlined, size: 24)),
+          child: Image.file(File(doubt.imagePath),
+              width: 64, height: 64, fit: BoxFit.cover,
+              cacheWidth: 128,
+              errorBuilder: (_, _, _) => Container(width: 64, height: 64,
+                  color: Theme.of(context).dividerColor,
+                  child: const Icon(Icons.image_not_supported_outlined, size: 24))),
         ),
         title: Text(doubt.title, maxLines: 2, overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.titleMedium),

@@ -42,14 +42,15 @@ class DetailScreen extends StatelessWidget {
       ),
       body: SafeArea(
         child: ListView(padding: const EdgeInsets.all(20), children: [
-          if (File(doubt.imagePath).existsSync())
-            ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 280),
-                child: Image.file(File(doubt.imagePath), fit: BoxFit.cover, width: double.infinity),
-              ),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 280),
+              child: Image.file(File(doubt.imagePath), fit: BoxFit.cover, width: double.infinity,
+                  cacheWidth: 1024,
+                  errorBuilder: (_, _, _) => const SizedBox.shrink()),
             ),
+          ),
           const SizedBox(height: 18),
           Text(doubt.title, style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 14),
