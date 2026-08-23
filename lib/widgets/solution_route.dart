@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 
+import '../screens/solution_screen.dart';
+
 /// Photo-pick ke baad SolutionScreen tak ka custom transition:
 /// slide-up + fade, 300ms, easeOutCubic.
 class SolutionRoute extends PageRouteBuilder {
   SolutionRoute(String imagePath)
       : super(
           transitionDuration: const Duration(milliseconds: 300),
-          pageBuilder: (_, _, _) => Placeholder(), // Task 8 me SolutionScreen aayega
+          pageBuilder: (_, _, _) => SolutionScreen(imagePath: imagePath),
           settings: RouteSettings(arguments: imagePath),
         );
 
