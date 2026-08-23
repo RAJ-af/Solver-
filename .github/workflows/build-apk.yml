@@ -29,6 +29,20 @@ jobs:
           echo "API_KEY=${{ secrets.OPENROUTER_API_KEY }}" >> .env
           echo "API_MODEL=${{ vars.API_MODEL }}" >> .env
 
+      - name: Verify API credentials before build
+        run: |
+          STATUS=$(curl -s -o response.json -w "%{http_code}" "${{ vars.API_BASE_URL }}" \
+            -H "Authorization: Bearer ${{ secrets.OPENROUTER_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"model": "${{ vars.API_MODEL }}", "messages": [{"role": "user", "content": "ping"}], "max_tokens": 5}')
+          echo "HTTP status: $STATUS"
+          if [ "$STATUS" -ne 200 ]; then
+            echo "API check FAILED. Response:"
+            cat response.json
+            exit 1
+          fi
+          echo "API check passed"
+
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
