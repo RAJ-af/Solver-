@@ -28,7 +28,7 @@ class _RootShellState extends State<RootShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
+      body: _FadeIndexedStack(
         index: _index,
         children: [
           const SolveTab(),
@@ -51,6 +51,49 @@ class _RootShellState extends State<RootShell> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Spec: "Tab switch: NavigationBar default + subtle fade via IndexedStack".
+/// IndexedStack hi rehta hai (children kabhi unmount nahi hote — tab state
+/// preserve), sirf index change par ~250ms easeOut fade chalti hai.
+class _FadeIndexedStack extends StatefulWidget {
+  const _FadeIndexedStack({required this.index, required this.children});
+
+  final int index;
+  final List<Widget> children;
+
+  @override
+  State<_FadeIndexedStack> createState() => _FadeIndexedStackState();
+}
+
+class _FadeIndexedStackState extends State<_FadeIndexedStack>
+    with SingleTickerProviderStateMixin {
+  late final _fade = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 250),
+    // Pehla frame full opacity — fade sirf tab SWITCH par, app-open par nahi.
+    value: 1.0,
+  );
+
+  @override
+  void didUpdateWidget(covariant _FadeIndexedStack oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.index != oldWidget.index) _fade.forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    _fade.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: CurvedAnimation(parent: _fade, curve: Curves.easeOut),
+      child: IndexedStack(index: widget.index, children: widget.children),
     );
   }
 }

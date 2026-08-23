@@ -12,6 +12,26 @@ import '../widgets/shimmer_box.dart';
 
 enum _Phase { analyzing, done, error }
 
+/// Spec: "Result: content fade+slide-in" — opacity 0→1 + 24px slide-up,
+/// 300ms easeOutCubic. TweenAnimationBuilder se controller lifecycle ka
+/// jhanjhat nahi; remount (retry ke baad) par naturally dobara chalti hai.
+class _Entrance extends StatelessWidget {
+  const _Entrance({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0, end: 1),
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+        builder: (_, t, child) => Opacity(
+          opacity: t,
+          child: Transform.translate(offset: Offset(0, 24 * (1 - t)), child: child),
+        ),
+        child: child,
+      );
+}
+
 /// Photo → API call → markdown solution. Success par auto-save.
 class SolutionScreen extends StatefulWidget {
   const SolutionScreen({super.key, required this.imagePath, AnswerProvider? api})
@@ -151,40 +171,42 @@ class _ResultView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return ListView(padding: const EdgeInsets.all(20), children: [
-      Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF131920) : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppTheme.teal.withValues(alpha: .25)),
-        ),
-        child: Row(children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.file(File(imagePath), width: 56, height: 56, fit: BoxFit.cover),
+    return _Entrance(
+      child: ListView(padding: const EdgeInsets.all(20), children: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF131920) : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppTheme.teal.withValues(alpha: .25)),
           ),
-          const SizedBox(width: 14),
-          Expanded(child: Text(answer.title, style: Theme.of(context).textTheme.titleLarge)),
-        ]),
-      ),
-      const SizedBox(height: 18),
-      Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF131920) : Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          child: Row(children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.file(File(imagePath), width: 56, height: 56, fit: BoxFit.cover),
+            ),
+            const SizedBox(width: 14),
+            Expanded(child: Text(answer.title, style: Theme.of(context).textTheme.titleLarge)),
+          ]),
         ),
-        child: GptMarkdown(answer.solution, style: Theme.of(context).textTheme.bodyMedium),
-      ),
-      const SizedBox(height: 24),
-      Row(children: [
-        Icon(Icons.check_circle_rounded, color: AppTheme.lime, size: 20),
-        const SizedBox(width: 8),
-        Expanded(child: Text('Solution history me save ho gaya',
-            style: Theme.of(context).textTheme.bodySmall)),
+        const SizedBox(height: 18),
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF131920) : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: GptMarkdown(answer.solution, style: Theme.of(context).textTheme.bodyMedium),
+        ),
+        const SizedBox(height: 24),
+        Row(children: [
+          Icon(Icons.check_circle_rounded, color: AppTheme.lime, size: 20),
+          const SizedBox(width: 8),
+          Expanded(child: Text('Solution history me save ho gaya',
+              style: Theme.of(context).textTheme.bodySmall)),
+        ]),
       ]),
-    ]);
+    );
   }
 }
 
@@ -195,21 +217,23 @@ class _ErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Container(width: 84, height: 84,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.error.withValues(alpha: .12),
-              borderRadius: BorderRadius.circular(24)),
-            child: Icon(Icons.cloud_off_rounded, size: 40,
-                color: Theme.of(context).colorScheme.error)),
-          const SizedBox(height: 20),
-          Text(error, textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 26),
-          FilledButton.icon(onPressed: onRetry, icon: const Icon(Icons.refresh_rounded), label: const Text('Retry')),
-        ]),
+    return _Entrance(
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Container(width: 84, height: 84,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.error.withValues(alpha: .12),
+                borderRadius: BorderRadius.circular(24)),
+              child: Icon(Icons.cloud_off_rounded, size: 40,
+                  color: Theme.of(context).colorScheme.error)),
+            const SizedBox(height: 20),
+            Text(error, textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 26),
+            FilledButton.icon(onPressed: onRetry, icon: const Icon(Icons.refresh_rounded), label: const Text('Retry')),
+          ]),
+        ),
       ),
     );
   }

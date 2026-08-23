@@ -98,4 +98,23 @@ void main() {
 
     await tester.pumpWidget(const SizedBox()); // dispose trigger, pending timer avoid
   });
+
+  testWidgets('result content par fade+slide-in entrance', (tester) async {
+    final db = MemDb();
+    final api = FakeApi(10, const SolvedAnswer(title: 'T', solution: 'S'));
+    File('${tmp.path}/img.jpg').writeAsBytesSync([1]);
+
+    await tester.pumpWidget(wrap(SolutionScreen(imagePath: '${tmp.path}/img.jpg', api: api), db));
+    await tester.pump(const Duration(milliseconds: 40)); // API resolve, entrance mid-flight
+
+    final inFlight = find.byWidgetPredicate((w) => w is Opacity && w.opacity < 1);
+    expect(inFlight, findsWidgets);
+    final midDy = tester.getCenter(find.byType(GptMarkdown)).dy; // slide-up se neeche
+
+    await tester.pumpAndSettle();
+    expect(find.byWidgetPredicate((w) => w is Opacity && w.opacity < 1), findsNothing);
+    expect(tester.getCenter(find.byType(GptMarkdown)).dy, lessThan(midDy)); // upar slide ho gaya
+
+    await tester.pumpWidget(const SizedBox()); // dispose trigger, pending timer avoid
+  });
 }
